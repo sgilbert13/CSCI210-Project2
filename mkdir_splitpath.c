@@ -1,19 +1,19 @@
 #include "types.h"
 
-extern struct NODE* root; // Pointer to the root of the file system
-extern struct NODE* cwd;  // Pointer to the current working directory
+extern struct NODE* root;
+extern struct NODE* cwd;
 
-// Function to make a directory
+// make directory
 void mkdir(char pathName[]) {
-    // Check for a valid path
-    if (pathName == NULL || strlen(pathName) == 0) {
+    // Check for valid path
+    if (pathName == NULL || strlen(pathName) == 0 || strcmp(pathName, "/") == 0) {
         printf("MKDIR ERROR: no path provided\n");
         return;
     }
 
     char baseName[64];
     char dirName[64];
-
+    
     // Use splitPath to get the base name and parent directory
     struct NODE* parentDir = splitPath(pathName, baseName, dirName);
     
@@ -60,39 +60,7 @@ void mkdir(char pathName[]) {
     printf("MKDIR SUCCESS: node %s successfully created\n", pathName);
 }
 
-// Function to change the current directory
-void cd(char* pathName) {
-    struct NODE* targetDir = splitPath(pathName, NULL, NULL);
-    if (targetDir == NULL) {
-        printf("CD ERROR: directory %s does not exist\n", pathName);
-    } else {
-        cwd = targetDir; // Change the current working directory
-    }
-}
-
-// Function to display the directory structure
-void treeHelper(struct NODE* node, int depth) {
-    if (node == NULL) return;
-
-    // Indentation for the current depth
-    for (int i = 0; i < depth; i++) {
-        printf("   ");
-    }
-    printf("|---%s\n", node->name); // Print current directory name
-
-    // Recursive call for child nodes
-    treeHelper(node->childPtr, depth + 1); // Child directories
-
-    // Recursive call for sibling nodes
-    treeHelper(node->siblingPtr, depth); // Sibling directories
-}
-
-// Function to print the tree starting from the current directory
-void tree() {
-    treeHelper(cwd, 0); // Start from the current working directory
-}
-
-// Handles tokenizing and absolute/relative pathing options
+// handles tokenizing and absolute/relative pathing options
 struct NODE* splitPath(char* pathName, char* baseName, char* dirName) {
     // Handle root directory case
     if (strcmp(pathName, "/") == 0) {
@@ -101,16 +69,12 @@ struct NODE* splitPath(char* pathName, char* baseName, char* dirName) {
         return root; // Return root node
     }
 
-    // Determine if path is absolute or relative
-    int isAbsolute = (pathName[0] == '/');
-    struct NODE* currentDir = isAbsolute ? root : cwd; // Start from root or cwd
-
     // Find the last slash in the pathName
     char* lastSlash = strrchr(pathName, '/');
     if (lastSlash == NULL) {
         strcpy(dirName, ""); // No directory part
         strcpy(baseName, pathName); // Everything is the base name
-        return currentDir; // Current working directory
+        return cwd; // Current working directory
     }
 
     // Extract directory name and base name
@@ -119,8 +83,11 @@ struct NODE* splitPath(char* pathName, char* baseName, char* dirName) {
     dirName[dirLen] = '\0'; // Null-terminate the directory name
     strcpy(baseName, lastSlash + 1); // Base name follows the last slash
 
-    // Traverse through the directory path
+    // Start from the root node to traverse the path
+    struct NODE* currentDir = root;
     char* token = strtok(dirName, "/");
+
+    // Traverse through the directory path
     while (token != NULL) {
         struct NODE* child = currentDir->childPtr;
         int found = 0;
