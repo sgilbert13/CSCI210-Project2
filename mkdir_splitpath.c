@@ -13,6 +13,8 @@ void mkdir(char pathName[]) {
 
     char baseName[64];
     char dirName[64];
+    
+    // Use splitPath to get the base name and parent directory
     struct NODE* parentDir = splitPath(pathName, baseName, dirName);
     
     if (parentDir == NULL) {
@@ -20,18 +22,12 @@ void mkdir(char pathName[]) {
         return; // Parent directory must exist
     }
 
-    // Iterate over existing child nodes to check for duplicates
+    // Check if the directory already exists
     for (struct NODE* child = parentDir->childPtr; child != NULL; child = child->siblingPtr) {
         if (strcmp(child->name, baseName) == 0) {
             printf("MKDIR ERROR: directory %s already exists\n", pathName);
             return; // Directory already exists
         }
-    }
-
-    // Check if the base name length is acceptable
-    if (strlen(baseName) >= sizeof(baseName)) {
-        printf("MKDIR ERROR: directory name too long\n");
-        return;
     }
 
     // Create a new directory node
@@ -118,6 +114,3 @@ struct NODE* splitPath(char* pathName, char* baseName, char* dirName) {
     // Return the current directory pointer
     return currentDir;
 }
-
-
-
